@@ -1,5 +1,5 @@
 /****************************************************************************
- * vendor/bouffalolab/chip/bl616cl/bouffalolab_start.c
+ * vendor/bouffalolab/chips/bl616cl/bl616cl_head.S
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -24,29 +24,51 @@
 
 #include <nuttx/config.h>
 
-#include <nuttx/arch.h>
-#include <nuttx/init.h>
-
-#include <arch/board/board.h>
-
-#include "riscv_internal.h"
+#include "chip.h"
 
 /****************************************************************************
- * Private Functions
+ * Public Symbols
  ****************************************************************************/
+
+  .section .text.entry
+  .global __start
+  .type   __start, %function
 
 /****************************************************************************
- * Public Functions
+ * Name: __start
  ****************************************************************************/
 
-/****************************************************************************
- * Name: __bl616cl_start
- ****************************************************************************/
+__start:
+  .option push
+  .option norelax
 
-void __bl616cl_start(void)
-{
-  riscv_earlyserialinit();
-  nx_start();
+  la      gp, __global_pointer$
+  la      sp, __StackTop
+  csrw    mscratch, sp
 
-  for (; ; );
-}
+  .option pop
+
+  csrw    mstatus, zero
+  csrw    mie, zero
+
+  /* Use numeric T-Head CSR encodings so the current GCC can assemble this. */
+
+  csrr    t0, 0x7c5
+  lui     t1, 0x100
+  or      t0, t0, t1
+  csrw    0x7c5, t0
+
+  la      t0, exception_common
+  csrw    mtvec, t0
+
+  la      t0, __bl616cl_start
+  jr      t0
+
+  .size __start, . - __start
+
+  .global _init
+  .global _fini
+
+_init:
+_fini:
+  ret

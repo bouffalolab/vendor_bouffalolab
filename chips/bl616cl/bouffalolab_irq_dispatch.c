@@ -1,5 +1,5 @@
 /****************************************************************************
- * vendor/bouffalolab/chip/bl616cl/bouffalolab_start.c
+ * vendor/bouffalolab/chips/bl616cl/bouffalolab_irq_dispatch.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -24,29 +24,25 @@
 
 #include <nuttx/config.h>
 
-#include <nuttx/arch.h>
-#include <nuttx/init.h>
+#include <nuttx/irq.h>
 
-#include <arch/board/board.h>
+#include <arch/irq.h>
 
 #include "riscv_internal.h"
-
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
-/****************************************************************************
- * Name: __bl616cl_start
- ****************************************************************************/
-
-void __bl616cl_start(void)
+void *riscv_dispatch_irq(uintreg_t mcause, uintreg_t *regs)
 {
-  riscv_earlyserialinit();
-  nx_start();
+  int irq = mcause & 0xfff;
 
-  for (; ; );
+  if ((mcause & RISCV_IRQ_BIT) != 0)
+    {
+      irq += RISCV_IRQ_ASYNC;
+    }
+
+  riscv_ack_irq(irq);
+  return riscv_doirq(irq, regs);
 }
