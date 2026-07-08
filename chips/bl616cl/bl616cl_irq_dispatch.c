@@ -1,5 +1,5 @@
 /****************************************************************************
- * vendor/bouffalolab/chips/bl616cl/chip.h
+ * vendor/bouffalolab/chips/bl616cl/bl616cl_irq_dispatch.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,34 +18,30 @@
  *
  ****************************************************************************/
 
-#ifndef __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_CHIP_H
-#define __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_CHIP_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <arch/chip/chip.h>
 #include <nuttx/config.h>
 
-#include <stdint.h>
+#include <nuttx/irq.h>
+
+#include <arch/irq.h>
+
+#include "riscv_internal.h"
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Public Functions
  ****************************************************************************/
 
-#define BL616CL_FLASH_XIP_BASE 0x80000000
-#define BL616CL_OCRAM_BASE 0x20fc0000
-#define BL616CL_OCRAM_SIZE (224 * 1024)
-#define BL616CL_WRAM_BASE 0x20ff8000
-#define BL616CL_WRAM_SIZE (160 * 1024)
-#define BL616CL_RAM_BASE BL616CL_OCRAM_BASE
-#define BL616CL_RAM_SIZE (BL616CL_OCRAM_SIZE + BL616CL_WRAM_SIZE)
+void* riscv_dispatch_irq(uintreg_t mcause, uintreg_t* regs)
+{
+    int irq = mcause & 0xfff;
 
-#define BL616CL_UART0_BASE 0x2000a000
-#define BL616CL_CLIC_BASE 0xe0800000
+    if ((mcause & RISCV_IRQ_BIT) != 0) {
+        irq += RISCV_IRQ_ASYNC;
+    }
 
-#define BL616CL_UART_TXFIFO_SIZE 32
-#define BL616CL_UART_CLOCK 40000000
-
-#endif /* __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_CHIP_H */
+    riscv_ack_irq(irq);
+    return riscv_doirq(irq, regs);
+}
