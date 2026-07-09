@@ -1,5 +1,5 @@
 /****************************************************************************
- * vendor/bouffalolab/chips/bl616cl/bl616cl_head.S
+ * apps/vendor/bouffalolab/chips/bl616cl/bl616cl_clock.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -24,45 +24,49 @@
 
 #include <nuttx/config.h>
 
+#include <stdint.h>
+
+#include "riscv_internal.h"
+
+#include "bl616cl_clock.h"
 #include "chip.h"
 
 /****************************************************************************
- * Public Symbols
+ * Pre-processor Definitions
  ****************************************************************************/
 
-  .section .text.entry
-  .global __start
-  .type   __start, %function
+#define BL616CL_GLB_UART_CFG1_OFFSET      0x154
+#define BL616CL_GLB_UART_CFG2_OFFSET      0x158
+#define BL616CL_HBN_GPIO5_FIXUP_REG       0x2000f014
+#define BL616CL_HBN_GPIO5_UNCOMMON_BIT    (1u << 16)
 
 /****************************************************************************
- * Name: __start
+ * Public Functions
  ****************************************************************************/
 
-__start:
-  .option push
-  .option norelax
+/****************************************************************************
+ * Name: bl616cl_clock_early_init
+ ****************************************************************************/
 
-  la      gp, __global_pointer$
-  la      sp, __StackTop
-  csrw    mscratch, sp
+void bl616cl_clock_early_init(void)
+{
+  /* Keep the boot clock tree for now. Board clock switching must later
+   * move into RAM-safe code before changing the flash clock.
+   */
+}
 
-  .option pop
+/****************************************************************************
+ * Name: bl616cl_pinmux_early_uart
+ ****************************************************************************/
 
-  csrw    mstatus, zero
-  csrw    mie, zero
+void bl616cl_pinmux_early_uart(void)
+{
+  uint32_t regval;
 
-  la      t0, exception_common
-  ori     t0, t0, 3
-  csrw    mtvec, t0
+  putreg32(0xffffffff, BL616CL_GLB_BASE + BL616CL_GLB_UART_CFG1_OFFSET);
+  putreg32(0x0000ffff, BL616CL_GLB_BASE + BL616CL_GLB_UART_CFG2_OFFSET);
 
-  la      t0, __bl616cl_start
-  jr      t0
-
-  .size __start, . - __start
-
-  .global _init
-  .global _fini
-
-_init:
-_fini:
-  ret
+  regval = getreg32(BL616CL_HBN_GPIO5_FIXUP_REG);
+  regval &= ~BL616CL_HBN_GPIO5_UNCOMMON_BIT;
+  putreg32(regval, BL616CL_HBN_GPIO5_FIXUP_REG);
+}

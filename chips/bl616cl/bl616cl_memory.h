@@ -1,5 +1,5 @@
 /****************************************************************************
- * vendor/bouffalolab/chips/bl616cl/bl616cl_head.S
+ * apps/vendor/bouffalolab/chips/bl616cl/bl616cl_memory.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,51 +18,21 @@
  *
  ****************************************************************************/
 
+#ifndef __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_BL616CL_MEMORY_H
+#define __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_BL616CL_MEMORY_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
 
-#include "chip.h"
-
 /****************************************************************************
- * Public Symbols
+ * Public Function Prototypes
  ****************************************************************************/
 
-  .section .text.entry
-  .global __start
-  .type   __start, %function
+void bl616cl_memory_early_init(void);
+void bl616cl_flash_early_init(void);
+void bl616cl_section_load(void);
 
-/****************************************************************************
- * Name: __start
- ****************************************************************************/
-
-__start:
-  .option push
-  .option norelax
-
-  la      gp, __global_pointer$
-  la      sp, __StackTop
-  csrw    mscratch, sp
-
-  .option pop
-
-  csrw    mstatus, zero
-  csrw    mie, zero
-
-  la      t0, exception_common
-  ori     t0, t0, 3
-  csrw    mtvec, t0
-
-  la      t0, __bl616cl_start
-  jr      t0
-
-  .size __start, . - __start
-
-  .global _init
-  .global _fini
-
-_init:
-_fini:
-  ret
+#endif /* __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_BL616CL_MEMORY_H */
