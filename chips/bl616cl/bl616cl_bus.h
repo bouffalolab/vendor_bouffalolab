@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/vendor/bouffalolab/chips/bl616cl/chip.h
+ * apps/vendor/bouffalolab/chips/bl616cl/bl616cl_bus.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,44 +18,19 @@
  *
  ****************************************************************************/
 
-#ifndef __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_CHIP_H
-#define __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_CHIP_H
+#ifndef __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_BL616CL_BUS_H
+#define __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_BL616CL_BUS_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <arch/chip/chip.h>
 #include <nuttx/config.h>
 
-#include <stdint.h>
-
 /****************************************************************************
- * Pre-processor Definitions
+ * Public Function Prototypes
  ****************************************************************************/
 
-#define BL616CL_FLASH_XIP_BASE 0x80000000
-#define BL616CL_OCRAM_BASE 0x20fc0000
-#define BL616CL_OCRAM_SIZE (224 * 1024)
-#define BL616CL_WRAM_BASE 0x20ff8000
-#define BL616CL_WRAM_SIZE (160 * 1024)
-#define BL616CL_RAM_BASE BL616CL_OCRAM_BASE
-#define BL616CL_RAM_SIZE (BL616CL_OCRAM_SIZE + BL616CL_WRAM_SIZE)
+int bl616cl_bus_error_initialize(void);
 
-#define BL616CL_UART0_BASE 0x2000a000
-#define BL616CL_CLIC_BASE 0xe0800000
-#define BL616CL_GLB_BASE 0x20000000
-#define BL616CL_TZC_SEC_BASE 0x20005000
-#define BL616CL_MCU_MISC_BASE 0x20009000
-#define BL616CL_SF_CTRL_BASE 0x2000b000
-#define BL616CL_CORET_BASE 0xe0004000
-#define BL616CL_CORET_MTIMECMP (BL616CL_CORET_BASE + 0x0000)
-#define BL616CL_CORET_MTIME (BL616CL_CORET_BASE + 0x7ffc)
-
-#define BL616CL_UART_TXFIFO_SIZE 32
-#define BL616CL_UART_CLOCK 40000000
-#define BL616CL_MTIMER_FREQ 1000000
-
-#define BL616CL_IRQ_CLIC_COUNT 83
-
-#endif /* __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_CHIP_H */
+#endif /* __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_BL616CL_BUS_H */

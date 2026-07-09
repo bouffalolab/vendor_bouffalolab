@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/vendor/bouffalolab/chips/bl616cl/include/irq.h
+ * apps/vendor/bouffalolab/chips/bl616cl/bl616cl_bus.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,71 +18,102 @@
  *
  ****************************************************************************/
 
-/* This file should never be included directly but, rather, only indirectly
- * through nuttx/irq.h
- */
-
-#ifndef __VENDOR_BOUFFALOLAB_CHIP_BL616CL_INCLUDE_IRQ_H
-#define __VENDOR_BOUFFALOLAB_CHIP_BL616CL_INCLUDE_IRQ_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
 
-#include <sys/types.h>
+#include <assert.h>
+#include <stdint.h>
+
+#include <nuttx/arch.h>
+#include <nuttx/irq.h>
+
+#include "riscv_internal.h"
+
+#include "bl616cl_bus.h"
+#include "chip.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define BL616CL_RISCV_IRQ_ASYNC 16
-#define BL616CL_RISCV_IRQ_MTIMER (BL616CL_RISCV_IRQ_ASYNC + 7)
+#define BL616CL_MCU_MISC_MCU_BUS_CFG0_OFFSET 0x0000
+#define BL616CL_MCU_MISC_TIMEOUT_EN          (1u << 0)
+#define BL616CL_MCU_MISC_DEC_ERR_RSP         (1u << 2)
 
-#define BL616CL_IRQ_NUM_BASE (BL616CL_RISCV_IRQ_ASYNC + 16)
-#define BL616CL_IRQ_FIRST    BL616CL_IRQ_NUM_BASE
-
-#define BL616CL_IRQ_BMX_MCU_BUS_ERR (BL616CL_IRQ_FIRST + 0)
-#define BL616CL_IRQ_BMX_MCU_TIMEOUT (BL616CL_IRQ_FIRST + 1)
-#define BL616CL_IRQ_MTIME BL616CL_RISCV_IRQ_MTIMER
-#define BL616CL_IRQ_UART0 (BL616CL_IRQ_FIRST + 28)
-#define BL616CL_IRQ_WDT1 (BL616CL_IRQ_FIRST + 66)
-
-#define NR_IRQS (BL616CL_IRQ_WDT1 + 1)
+#define BL616CL_MCU_BUS_CFG0 \
+  (BL616CL_MCU_MISC_BASE + BL616CL_MCU_MISC_MCU_BUS_CFG0_OFFSET)
 
 /****************************************************************************
- * Public Types
+ * Private Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Inline Functions
+ * Name: bl616cl_bus_error_interrupt
  ****************************************************************************/
 
-/****************************************************************************
- * Public Data
- ****************************************************************************/
-
-#undef EXTERN
-#if defined(__cplusplus)
-#define EXTERN extern "C"
-extern "C"
+static int bl616cl_bus_error_interrupt(int irq, void *context, void *arg)
 {
-#else
-#define EXTERN extern
-#endif
+  UNUSED(irq);
+  UNUSED(context);
+  UNUSED(arg);
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
-
-/****************************************************************************
- * Inline Functions
- ****************************************************************************/
-
-#undef EXTERN
-#if defined(__cplusplus)
+  PANIC();
+  return OK;
 }
-#endif
 
-#endif /* __VENDOR_BOUFFALOLAB_CHIP_BL616CL_INCLUDE_IRQ_H */
+/****************************************************************************
+ * Name: bl616cl_bus_error_enable
+ ****************************************************************************/
+
+static void bl616cl_bus_error_enable(void)
+{
+  uint32_t regval;
+
+  regval = getreg32(BL616CL_MCU_BUS_CFG0);
+  regval |= BL616CL_MCU_MISC_TIMEOUT_EN;
+  regval &= ~BL616CL_MCU_MISC_DEC_ERR_RSP;
+  putreg32(regval, BL616CL_MCU_BUS_CFG0);
+}
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: bl616cl_bus_error_initialize
+ *
+ * Description:
+ *   Enable BL616CL MCU bus error and timeout traps after core bring-up.
+ *
+ ****************************************************************************/
+
+int bl616cl_bus_error_initialize(void)
+{
+  int ret;
+
+  ret = irq_attach(BL616CL_IRQ_BMX_MCU_BUS_ERR,
+                   bl616cl_bus_error_interrupt,
+                   NULL);
+  if (ret < 0)
+    {
+      return ret;
+    }
+
+  ret = irq_attach(BL616CL_IRQ_BMX_MCU_TIMEOUT,
+                   bl616cl_bus_error_interrupt,
+                   NULL);
+  if (ret < 0)
+    {
+      return ret;
+    }
+
+  bl616cl_bus_error_enable();
+
+  up_enable_irq(BL616CL_IRQ_BMX_MCU_BUS_ERR);
+  up_enable_irq(BL616CL_IRQ_BMX_MCU_TIMEOUT);
+
+  return OK;
+}
