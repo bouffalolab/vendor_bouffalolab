@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/vendor/bouffalolab/chips/bl616cl/bl616cl_start.c
+ * apps/vendor/bouffalolab/chips/bl616cl/bl616cl_system.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,53 +18,19 @@
  *
  ****************************************************************************/
 
+#ifndef __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_BL616CL_SYSTEM_H
+#define __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_BL616CL_SYSTEM_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
 
-#include <nuttx/arch.h>
-#include <nuttx/init.h>
-
-#include <arch/board/board.h>
-
-#include "riscv_internal.h"
-
-#include "bl616cl_cache.h"
-#include "bl616cl_clock.h"
-#include "bl616cl_cpu.h"
-#include "bl616cl_memory.h"
-#include "bl616cl_system.h"
-
 /****************************************************************************
- * Private Functions
+ * Public Function Prototypes
  ****************************************************************************/
 
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
+void bl616cl_system_post_init(void);
 
-/****************************************************************************
- * Name: __bl616cl_start
- ****************************************************************************/
-
-void __bl616cl_start(void)
-{
-  bl616cl_thead_cpu_init();
-  bl616cl_memory_early_init();
-  bl616cl_flash_early_init();
-  bl616cl_pmp_init();
-  bl616cl_cache_early_init();
-  bl616cl_clock_early_init();
-  bl616cl_pinmux_early_uart();
-  riscv_fpuconfig();
-  bl616cl_section_load();
-  bl616cl_system_post_init();
-  riscv_earlyserialinit();
-  nx_start();
-
-  for (; ; )
-    {
-    }
-}
+#endif /* __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_BL616CL_SYSTEM_H */

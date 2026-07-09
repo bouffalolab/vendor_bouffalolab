@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/vendor/bouffalolab/chips/bl616cl/bl616cl_start.c
+ * apps/vendor/bouffalolab/chips/bl616cl/bl616cl_system.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -24,47 +24,23 @@
 
 #include <nuttx/config.h>
 
-#include <nuttx/arch.h>
-#include <nuttx/init.h>
-
-#include <arch/board/board.h>
-
-#include "riscv_internal.h"
-
 #include "bl616cl_cache.h"
-#include "bl616cl_clock.h"
-#include "bl616cl_cpu.h"
-#include "bl616cl_memory.h"
 #include "bl616cl_system.h"
-
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: __bl616cl_start
+ * Name: bl616cl_system_post_init
+ *
+ * Description:
+ *   Run only the post-load cache maintenance needed before nx_start().  SDK
+ *   framework initializers and global IRQ enable are owned by openvela.
+ *
  ****************************************************************************/
 
-void __bl616cl_start(void)
+void bl616cl_system_post_init(void)
 {
-  bl616cl_thead_cpu_init();
-  bl616cl_memory_early_init();
-  bl616cl_flash_early_init();
-  bl616cl_pmp_init();
-  bl616cl_cache_early_init();
-  bl616cl_clock_early_init();
-  bl616cl_pinmux_early_uart();
-  riscv_fpuconfig();
-  bl616cl_section_load();
-  bl616cl_system_post_init();
-  riscv_earlyserialinit();
-  nx_start();
-
-  for (; ; )
-    {
-    }
+  bl616cl_cache_after_load();
 }
