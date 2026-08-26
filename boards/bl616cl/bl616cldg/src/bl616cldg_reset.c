@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/vendor/bouffalolab/boards/bl616cl/bl616cldg/src/bl616cldg_boot.c
+ * apps/vendor/bouffalolab/boards/bl616cl/bl616cldg/src/bl616cldg_reset.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -24,40 +24,68 @@
 
 #include <nuttx/config.h>
 
-#include <syslog.h>
+#include <debug.h>
+#include <stdlib.h>
 
-#ifdef CONFIG_BOARDCTL_RESET_CAUSE
-#  include "bl616cl_systemreset.h"
-#endif
+#include <nuttx/arch.h>
+#include <nuttx/board.h>
 
-#include "bl616cldg.h"
+#include "bl616cl_systemreset.h"
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
-/****************************************************************************
- * Name: board_late_initialize
- *
- * Description:
- *   This hook runs in the AppBringUp thread and starts BL616CLDG board
- *   initialization that may depend on scheduler context.
- *
- ****************************************************************************/
-
-#ifdef CONFIG_BOARD_LATE_INITIALIZE
-void board_late_initialize(void)
+#ifdef CONFIG_BOARDCTL_RESET
+int board_reset(int status)
 {
-  int ret;
-
 #ifdef CONFIG_BOARDCTL_RESET_CAUSE
-  bl616cl_reset_reason_initialize();
+  enum bl616cl_reset_reason_e reason = BL616CL_RESET_SOFTWARE;
+
+#if CONFIG_BOARD_RESET_ON_ASSERT >= 1
+  if (status == CONFIG_BOARD_ASSERT_RESET_VALUE)
+    {
+      reason = BL616CL_RESET_FATAL;
+    }
 #endif
 
-  ret = bl616cldg_bringup();
-  if (ret < 0)
+  bl616cl_reset_reason_set(reason);
+#endif
+
+  up_systemreset();
+  return 0;
+}
+#endif
+
+#ifdef CONFIG_BOARDCTL_RESET_CAUSE
+int board_reset_cause(struct boardioc_reset_cause_s *cause)
+{
+  DEBUGASSERT(cause != NULL);
+
+  cause->flag = 0;
+
+  switch (bl616cl_reset_reason_get())
     {
-      syslog(LOG_ERR, "ERROR: BL616CLDG bringup failed: %d\n", ret);
+      case BL616CL_RESET_WATCHDOG:
+        cause->cause = BOARDIOC_RESETCAUSE_SYS_RWDT;
+        break;
+
+      case BL616CL_RESET_FATAL:
+        cause->cause = BOARDIOC_RESETCAUSE_CPU_SOFT;
+        cause->flag = BOARDIOC_SOFTRESETCAUSE_ASSERT;
+        break;
+
+      case BL616CL_RESET_SOFTWARE:
+        cause->cause = BOARDIOC_RESETCAUSE_CPU_SOFT;
+        cause->flag = BOARDIOC_SOFTRESETCAUSE_USER_REBOOT;
+        break;
+
+      case BL616CL_RESET_POWER_ON:
+      default:
+        cause->cause = BOARDIOC_RESETCAUSE_SYS_CHIPPOR;
+        break;
     }
+
+  return OK;
 }
 #endif

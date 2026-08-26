@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/vendor/bouffalolab/boards/bl616cl/bl616cldg/src/bl616cldg_boot.c
+ * apps/vendor/bouffalolab/chips/bl616cl/bl616cl_systemreset.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,46 +18,37 @@
  *
  ****************************************************************************/
 
+#ifndef __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_BL616CL_SYSTEMRESET_H
+#define __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_BL616CL_SYSTEMRESET_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
 
-#include <syslog.h>
-
-#ifdef CONFIG_BOARDCTL_RESET_CAUSE
-#  include "bl616cl_systemreset.h"
-#endif
-
-#include "bl616cldg.h"
+#include <stdint.h>
 
 /****************************************************************************
- * Public Functions
+ * Public Types
  ****************************************************************************/
 
-/****************************************************************************
- * Name: board_late_initialize
- *
- * Description:
- *   This hook runs in the AppBringUp thread and starts BL616CLDG board
- *   initialization that may depend on scheduler context.
- *
- ****************************************************************************/
-
-#ifdef CONFIG_BOARD_LATE_INITIALIZE
-void board_late_initialize(void)
+enum bl616cl_reset_reason_e
 {
-  int ret;
+  BL616CL_RESET_POWER_ON = 0,
+  BL616CL_RESET_WATCHDOG,
+  BL616CL_RESET_FATAL,
+  BL616CL_RESET_SOFTWARE,
+};
+
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
 #ifdef CONFIG_BOARDCTL_RESET_CAUSE
-  bl616cl_reset_reason_initialize();
+void bl616cl_reset_reason_initialize(void);
+void bl616cl_reset_reason_set(enum bl616cl_reset_reason_e reason);
+enum bl616cl_reset_reason_e bl616cl_reset_reason_get(void);
 #endif
 
-  ret = bl616cldg_bringup();
-  if (ret < 0)
-    {
-      syslog(LOG_ERR, "ERROR: BL616CLDG bringup failed: %d\n", ret);
-    }
-}
-#endif
+#endif /* __VENDOR_BOUFFALOLAB_CHIPS_BL616CL_BL616CL_SYSTEMRESET_H */
